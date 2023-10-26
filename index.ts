@@ -1,9 +1,3 @@
-// Import stylesheets
-import './style.css';
-
-// Write TypeScript code!
-const appDiv: HTMLElement = document.getElementById('app');
-appDiv.innerHTML = `<h1>TypeScript Starter asd </h1>`;
 
 type FetchItem = {
   fetchRequest: Promise<Response>;
@@ -24,13 +18,14 @@ class FetchQueue {
     };
 
     this.queue.push(newItem);
-    if (!this.isFetching) {
-      this.startFetching();
-      this.isFetching = true;
-    }
+
+    if (this.isFetching) return;
+    
+    this.startFetching();
+    this.isFetching = true;
   }
 
-  dequeue() {
+  private dequeue() {
     this.queue.shift();
   }
 
