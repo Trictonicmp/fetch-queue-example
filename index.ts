@@ -1,4 +1,3 @@
-
 type FetchItem = {
   fetchRequest: Promise<Response>;
   callback: (responseData) => void;
@@ -18,11 +17,11 @@ class FetchQueue {
     };
 
     this.queue.push(newItem);
-
-    if (this.isFetching) return;
-    
-    this.startFetching();
-    this.isFetching = true;
+    console.log("Added");
+    if (!this.isFetching) {
+      this.startFetching();
+      this.isFetching = true;
+    }
   }
 
   private dequeue() {
@@ -35,6 +34,7 @@ class FetchQueue {
     const item = this.next();
 
     try {
+      console.log("tries");
       const response = await item.fetchRequest;
       const data = await response.json();
       item.callback(data);
@@ -42,9 +42,10 @@ class FetchQueue {
       this.isFetching = false;
       this.startFetching();
     } catch (error) {
+      console.log("error");
       item.tries++;
       if (item.tries > this.maxRequestCalls) {
-        console.log('error');
+        console.log("out");
         this.dequeue();
         this.isFetching = false;
         this.startFetching();
@@ -65,71 +66,72 @@ class FetchQueue {
 
 const fetchQueue = new FetchQueue();
 fetchQueue.addToQueue(
-  fetch('https://api.github.com/users/Trictonicmp'),
+  fetch("https://api.github.com/users/Trictonicmp"),
   (data) => {
-    console.log('fetch 1');
-    console.log(data);
+    console.log("fetch 1");
+    //console.log(data);
   }
 );
 
-fetchQueue.addToQueue(fetch('https://api.publicapis.org/entries'), (data) => {
-  console.log('fetch 2');
-  console.log(data);
+fetchQueue.addToQueue(fetch("https://api.publicapis.org/entries"), (data) => {
+  console.log("fetch 2");
+  //console.log(data);
 });
 
-fetchQueue.addToQueue(fetch('https://catfact.ninja/fact'), (data) => {
-  console.log('fetch 3');
-  console.log(data);
-});
-
-fetchQueue.addToQueue(
-  fetch('https://api.coindesk.com/v1/bpi/currentprice.json'),
-  (data) => {
-    console.log('fetch 4');
-    console.log(data);
-  }
-);
-
-fetchQueue.addToQueue(
-  fetch('https://api.github.com/users/Trictonicmo'),
-  (data) => {
-    console.log('fetch 10');
-  }
-);
-
-fetchQueue.addToQueue(
-  fetch('https://www.boredapi.com/api/activity'),
-  (data) => {
-    console.log('fetch 5');
-    console.log(data);
-  }
-);
-
-fetchQueue.addToQueue(fetch('https://api.genderize.io/?name=luc'), (data) => {
-  console.log('fetch 6');
-  console.log(data);
+fetchQueue.addToQueue(fetch("https://catfact.ninja/fact"), (data) => {
+  console.log("fetch 3");
+  //console.log(data);
 });
 
 fetchQueue.addToQueue(
-  fetch('https://api.nationalize.io/?name=nathaniel'),
+  fetch("https://api.coindesk.com/v1/bpi/currentprice.json"),
   (data) => {
-    console.log('fetch 7');
+    console.log("fetch 4");
+    //console.log(data);
+  }
+);
+
+fetchQueue.addToQueue(
+  fetch("https://api.github.om/users/Trictonicmp"),
+  (data) => {
+    console.log("fetch 10");
     console.log(data);
   }
 );
 
 fetchQueue.addToQueue(
-  fetch('https://datausa.io/api/data?drilldowns=Nation&measures=Population'),
+  fetch("https://www.boredapi.com/api/activity"),
   (data) => {
-    console.log('fetch 8');
-    console.log(data);
+    console.log("fetch 5");
+    //console.log(data);
+  }
+);
+
+fetchQueue.addToQueue(fetch("https://api.genderize.io/?name=luc"), (data) => {
+  console.log("fetch 6");
+  //console.log(data);
+});
+
+fetchQueue.addToQueue(
+  fetch("https://api.nationalize.io/?name=nathaniel"),
+  (data) => {
+    console.log("fetch 7");
+    //console.log(data);
   }
 );
 
 fetchQueue.addToQueue(
-  fetch('https://dog.ceo/api/breeds/image/random'),
+  fetch("https://datausa.io/api/data?drilldowns=Nation&measures=Population"),
   (data) => {
-    console.log('fetch 9');
-    console.log(data);
+    console.log("fetch 8");
+    //console.log(data);
+  }
+);
+
+fetchQueue.addToQueue(
+  fetch("https://dog.ceo/api/breeds/image/random"),
+  (data) => {
+    console.log("fetch 9");
+    //console.log(data);
   }
 );
