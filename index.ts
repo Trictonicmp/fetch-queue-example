@@ -24,7 +24,7 @@ class FetchQueue {
     }
   }
 
-  dequeue() {
+  private dequeue() {
     this.queue.shift();
   }
 
