@@ -5,28 +5,32 @@ type FetchItem = {
   onSuccess: (responseData) => void;
   onError: (error: ErrorLog) => void;
   tries: number;
+  id: number;
 };
 
 class FetchQueue {
   queue: FetchItem[] = [];
   isFetching = false;
   maxRequestCalls = 5;
-  constructor(private readonly errorHandler: ErrorHandler) {}
+  id = 0;
+  constructor(private readonly errorHandler: IErrorHandler) {}
 
   addToQueue(
     fetchRequest: Promise<AxiosResponse>,
     onSuccess: (responseData: AxiosResponse) => void,
     onError: (error: ErrorLog) => void
   ) {
+    this.id += 1;
     const newItem: FetchItem = {
       fetchRequest,
       onSuccess,
       onError,
       tries: 0,
+      id: this.id,
     };
 
     this.queue.push(newItem);
-    console.log("Added");
+    console.log("Added:", newItem.id);
     if (!this.isFetching) {
       this.startFetching();
       this.isFetching = true;
@@ -34,6 +38,10 @@ class FetchQueue {
   }
 
   dequeue() {
+    if (this.queue.length > 0) {
+      const { id } = this.queue[0];
+      console.error("dequeue", id);
+    }
     this.queue.shift();
   }
 
@@ -42,33 +50,36 @@ class FetchQueue {
 
     const item = this.next();
 
-    console.log("start fetching", item.tries);
+    console.warn("start fetching", item.id);
     /* TRY */
     try {
-      console.log("tries");
       const response = await item.fetchRequest;
       item.onSuccess(response.data);
-      this.isFetching = false;
-      this.startFetching();
+      console.log("success:", item.id);
+      this.restart({ isFetching: false });
+      return;
     } catch (error) {
       const errorLog = this.errorHandler.handle(error);
+      console.error("error");
       if (errorLog.type === ErrorTypes.Cancel) {
         item.onError(errorLog);
-        this.restart();
+        this.restart({ isFetching: false });
+        console.error("cancel:", item.id);
         return;
       }
 
       item.tries++;
-      if (item.tries > this.maxRequestCalls) {
+      if (item.tries >= this.maxRequestCalls) {
+        console.error("Max requests", item.id);
         item.onError(errorLog);
-        this.restart();
+        this.restart({ isFetching: false });
         return;
       }
 
+      this.dequeue();
       this.queue.push(item);
       this.startFetching();
-    } finally {
-      this.dequeue();
+      return;
     }
   }
 
@@ -76,15 +87,19 @@ class FetchQueue {
     return this.queue[0];
   }
 
-  private restart() {
+  private restart({ isFetching }) {
     this.dequeue();
-    this.isFetching = false;
+    this.isFetching = isFetching;
     this.startFetching();
   }
 
   get isEmpty(): boolean {
     return this.queue.length < 1;
   }
+}
+
+interface IErrorHandler {
+  handle: (error) => ErrorLog | ResponseError;
 }
 
 interface ErrorLog {
@@ -105,7 +120,7 @@ enum ErrorTypes {
   Other = "other",
 }
 
-class ErrorHandler {
+class ErrorHandler implements IErrorHandler {
   handle(error) {
     if (error.response) {
       return this.createResponseError(error);
@@ -162,33 +177,33 @@ const fetchQueue = new FetchQueue(new ErrorHandler());
 fetchQueue.addToQueue(
   axios.get("https://api.github.com/users/Trictonicmp"),
   (data) => {
-    console.log("fetch 1");
+    //console.log("fetch 1");
     //console.log(data);
   },
   (error) => {
-    console.log("error", error);
+    //console.log("error", error);
   }
 );
 
 fetchQueue.addToQueue(
   axios.get("https://api.publicapis.org/entries"),
   (data) => {
-    console.log("fetch 2");
+    //console.log("fetch 2");
     //console.log(data);
   },
   (error) => {
-    console.log("error", error);
+    //console.log("error", error);
   }
 );
 
 fetchQueue.addToQueue(
   axios.get("https://catfact.ninja/fact"),
   (data) => {
-    console.log("fetch 3");
+    //console.log("fetch 3");
     //console.log(data);
   },
   (error) => {
-    console.log("error", error);
+    //console.log("error", error);
   }
 );
 
@@ -201,53 +216,53 @@ fetchQueue.addToQueue(
     signal: controller.signal,
   }),
   (data) => {
-    console.log("fetch 4");
+    //console.log("fetch 4");
   },
   (error) => {
-    console.log("error", error);
+    //console.log("error", error);
   }
 );
 
 fetchQueue.addToQueue(
   axios.get("https://api.github.om/users/Trictonicmp"),
   (data) => {
-    console.log("fetch 10");
+    //console.log("fetch 10");
   },
   (error) => {
-    console.log("error", error);
+    //console.log("error", error);
   }
 );
 
 fetchQueue.addToQueue(
   axios.get("https://www.boredapi.com/api/activity"),
   (data) => {
-    console.log("fetch 5");
+    //console.log("fetch 5");
     //console.log(data);
   },
   (error) => {
-    console.log("error", error);
+    //console.log("error", error);
   }
 );
 
 fetchQueue.addToQueue(
   axios.get("https://api.genderize.io/?name=luc"),
   (data) => {
-    console.log("fetch 6");
+    //console.log("fetch 6");
     //console.log(data);
   },
   (error) => {
-    console.log("error", error);
+    //console.log("error", error);
   }
 );
 
 fetchQueue.addToQueue(
   axios.get("https://api.nationalize.io/?name=nathaniel"),
   (data) => {
-    console.log("fetch 7");
+    //console.log("fetch 7");
     //console.log(data);
   },
   (error) => {
-    console.log("error", error);
+    //console.log("error", error);
   }
 );
 
@@ -256,21 +271,21 @@ fetchQueue.addToQueue(
     "https://datausa.io/api/data?drilldowns=Nation&measures=Population"
   ),
   (data) => {
-    console.log("fetch 8");
+    //console.log("fetch 8");
     //console.log(data);
   },
   (error) => {
-    console.log("error", error);
+    //console.log("error", error);
   }
 );
 
 fetchQueue.addToQueue(
   axios.get("https://dog.ceo/api/breeds/image/random"),
   (data) => {
-    console.log("fetch 9");
+    //console.log("fetch 9");
     //console.log(data);
   },
   (error) => {
-    console.log("error", error);
+    //console.log("error", error);
   }
 );
